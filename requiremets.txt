@@ -1,0 +1,7 @@
+flet
+cvzone
+opencv-python
+ultralytics
+pyautogui
+cvzone
+mediapipe 

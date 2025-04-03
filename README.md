@@ -3,6 +3,8 @@
 ## 运行
 linux
 ```
+#python3.11
+pip install -r requirements.txt
 ./run.sh
 ```
 windows
