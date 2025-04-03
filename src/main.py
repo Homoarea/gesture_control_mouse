@@ -116,19 +116,6 @@ def main(page: ft.Page):
 
         return hands
 
-    def model_gesture_detect(frame):
-        results=model(frame,imgsz=int(model_imgsz.value),iou=float(model_iou.value),conf=float(model_conf.value))
-        return results
-        # for result in results:
-        #     arr=result.boxes.numpy()
-        #     names = [result.names[cls.item()] for cls in result.boxes.cls.int()]  # class name of each box
-        #     nums=list(map(lambda x:x.item(),result.boxes.cls.int()))
-        #     confs = result.boxes.conf  # confidence score of each box
-        #     if arr.xyxy.size and show_switch.value and show_gesture_checkbox.value:
-        #         position=list(map(int,arr.xyxy[0]))
-        #         cv2.rectangle(frame,position[0:2],position[2:4],(11,255,14),2)
-        #         cv2.putText(frame,f"{nums}"+"{} | {:.2f}".format(names[0],arr.conf[0]),position[0:2], cv2.FONT_HERSHEY_DUPLEX,1,(0,0,255),1,cv2.LINE_AA)
-
     def model_run_pressed(e):
         animate_model_switcher(stop_model_button)
         status.value=True
@@ -153,7 +140,7 @@ def main(page: ft.Page):
 
             hands=model_keypoint_tracker(frame)
 
-            results=model_gesture_detect(frame)
+            results=model(frame,imgsz=int(model_imgsz.value),iou=float(model_iou.value),conf=float(model_conf.value))
 
             for result in results:
                 arr=result.boxes.numpy()
@@ -170,9 +157,9 @@ def main(page: ft.Page):
                     always=config.GESTURE_NAME.ALL.value
                     for e in list(map(lambda x:x.content.controls,list(filter(lambda x:x.data,task_item_list.controls)))):
                         last_name,now_name,k_id,mouse_task,mouse_name=list(map(lambda x:x.value,e))
+                        k_id=int(k_id)
                         if last_name==always and now_name==always:
                             handle_mouse_task(mouse_task,mouse_name,hands[0]["lmList"][k_id][0:2] if hands else None)
-                            debug_txt(hands[0]["lmList"][k_id])
                         elif last_name==always and last!=now_name and now==now_name:
                             handle_mouse_task(mouse_task,mouse_name,hands[0]["lmList"][k_id][0:2] if hands else None)
                         elif now_name==always and last==last_name and now!=last_name:
@@ -184,6 +171,7 @@ def main(page: ft.Page):
                 
             image.src_base64=base64.b64encode(cv2.imencode('.jpg',frame)[1]).decode("utf-8")
             page.update()
+
 
         image.src_base64=config.Image_64.DEFAULT.value
         cap.release()
@@ -210,18 +198,17 @@ def main(page: ft.Page):
     )
 
     show_switch=ft.Switch(label="",value=False)
-    show_fps_checkbox=ft.Checkbox(label="Show FPS on frame",value=False)
-    show_all_keypoint_checkbox=ft.Checkbox(label="Show all keypoints on hands",value=False)
-    show_keypoint_id=ft.Checkbox(label="Show keypoint ID on hands",value=False)
-    show_flipType=ft.Checkbox(label="Show flipType(change the left and right)",value=False)
-    show_gesture_checkbox=ft.Checkbox(label="Show gesture class and configture on the frame",value=False)
+    show_fps_checkbox=ft.Checkbox(label="显示FPS(Show FPS)",value=False)
+    show_all_keypoint_checkbox=ft.Checkbox(label="[cvzone]显示关键点(show keypoint)",value=False)
+    show_keypoint_id=ft.Checkbox(label="显示关键点标号(show keypoint id)",value=False)
+    show_flipType=ft.Checkbox(label="[cvzone]反转左右手(change the left and right)",value=False)
+    show_gesture_checkbox=ft.Checkbox(label="显示手势种类和置信度(show gesture and configture)",value=False)
 
     show_panel=ft.ExpansionTile(
         title=ft.Row(controls=[
             ft.Text("Show"),
             show_switch
         ]),
-        subtitle=ft.Text("This draws the visual results on the frame"),
         controls=[
             show_fps_checkbox,
             show_all_keypoint_checkbox,
@@ -235,12 +222,9 @@ def main(page: ft.Page):
     # camera setting
     def sync_data(e:ft.TextField,func):
         e.data=func(e.value)
-        debug_type_list(e.value)
-        debug_type_list(e.data)
     def list_col_fit(e):
         for i in e:i.col={"sm":6,"md":4,"xl":2}
         return e
-
     camera_id=ft.DropdownM2(
         label="ID",
         value=cap_tools.cap_available()[0],
@@ -262,7 +246,6 @@ def main(page: ft.Page):
     )
     camera_setting_panel=ft.ExpansionTile(
         title=ft.Text("Camera"),
-        subtitle=ft.Text("Change basic settings for camera"),
         controls=[
             ft.Divider(),
             ft.ResponsiveRow(controls=list_col_fit([camera_id,camera_width,camera_height,camera_fps]))
@@ -274,7 +257,6 @@ def main(page: ft.Page):
         value="cpu",
         options=[
             ft.dropdownm2.Option("cpu"),
-            ft.dropdownm2.Option("gpu"),
         ]
     )
     model_imgsz=ft.TextField(
@@ -291,7 +273,6 @@ def main(page: ft.Page):
     )
     model_setting_panel = ft.ExpansionTile(
         title=ft.Text("Model"),
-        subtitle=ft.Text("Change basic settings for model"),
         controls=[
             ft.Divider(),
             ft.ResponsiveRow(
@@ -331,6 +312,7 @@ def main(page: ft.Page):
                 pyautogui.mouseDown(button=name)
             case config.MOUSE_TASK.click.value:
                 pyautogui.click(button=name)
+                
 
     # long press to delete the task
     def task_item_long_press(e):
@@ -428,12 +410,12 @@ def main(page: ft.Page):
                     icon_color=ft.Colors.GREEN_300,
                     on_click=add_model_task,
                 ),
-                ft.TextButton(
-                    text="Print Container",
-                    on_click=print_task_list
-                ),
+                # ft.TextButton(
+                #     text="Print Container",
+                #     on_click=print_task_list
+                # ),
                 ft.TextField(
-                    label="pyautogui_PAUSE",
+                    label="[pyautogui]PAUSE",
                     value=0.1,
                     on_blur=change_pyautogui_PAUSE,
                     width=150
