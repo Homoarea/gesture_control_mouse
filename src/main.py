@@ -14,7 +14,7 @@ SC_WIDTH,SC_HEIGHT=pyautogui.size()
 
 fpsReader=FPS(avgCount=30)
 
-model=YOLO(model="/src/models/int8_640px_openvino_model")
+model=YOLO(model="/src/assets/models/int8_640px_openvino_model")
 
 detector=HandDetector(staticMode=False,maxHands=2,modelComplexity=1,detectionCon=0.5,minTrackCon=0.5)
 
